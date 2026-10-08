@@ -1,0 +1,6 @@
+{
+  "name": "Floresta Verde CRM",
+  "description": "Sistema de gestão de clientes, funis B2B e B2C, métricas de recompra e ritmo de pedidos da Floresta Verde.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

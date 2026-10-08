@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "Customer": {
+      "title": "Customer",
+      "description": "Dados do cliente B2B ou B2C, métricas e limite de crédito",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "tradeName": { "type": "string" },
+        "segment": { "type": "string", "enum": ["b2b", "b2c"] },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "document": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "channelOrigin": { "type": "string" },
+        "funnelStage": { "type": "string" },
+        "assignedTo": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "customCycleDays": { "type": "number" },
+        "creditLimit": { "type": "number" },
+        "preferredPaymentTerm": { "type": "string" }
+      },
+      "required": ["id", "name", "segment", "createdAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Pedidos de compra e dados de faturamento a prazo",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerSegment": { "type": "string", "enum": ["b2b", "b2c"] },
+        "date": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pago", "pendente", "cancelado"] },
+        "itemsSummary": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "notes": { "type": "string" },
+        "isTermPayment": { "type": "boolean" },
+        "termDays": { "type": "number" },
+        "termDueDate": { "type": "string" },
+        "termStatus": { "type": "string", "enum": ["em_dia", "vence_hoje", "vencido", "pago"] },
+        "boletoBarcode": { "type": "string" },
+        "boletoPaidDate": { "type": "string" }
+      },
+      "required": ["id", "customerId", "customerName", "date", "totalAmount", "status"]
+    },
+    "CRMUser": {
+      "title": "CRMUser",
+      "description": "Contas de usuário e permissões da equipe comercial e diretoria",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["master", "diretor", "comercial", "vendedor", "financeiro"] },
+        "roleLabel": { "type": "string" },
+        "isMaster": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["ativo", "inativo"] },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "lastLoginAt": { "type": "string" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "username", "name", "role", "status", "createdAt"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Configurações gerais e parâmetros de ciclo",
+      "type": "object",
+      "properties": {
+        "b2bDefaultCycleDays": { "type": "number" },
+        "b2cDefaultCycleDays": { "type": "number" },
+        "warningThresholdPercent": { "type": "number" },
+        "customLogo": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Coleção de clientes da Floresta Verde"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Coleção de pedidos e vendas a prazo"
+    },
+    "/users/{userId}": {
+      "schema": "CRMUser",
+      "description": "Coleção de colaboradores e usuários autorizados do CRM"
+    },
+    "/settings/{settingId}": {
+      "schema": "Settings",
+      "description": "Configurações gerais do sistema"
+    }
+  }
+}
