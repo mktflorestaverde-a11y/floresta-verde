@@ -44,6 +44,7 @@ interface TopHeaderProps {
   onLogout: () => void;
   onSelectTab?: (tab: ActiveTab) => void;
   onViewLandingPage?: () => void;
+  onOpenHostingerModal?: () => void;
 }
 
 export const TopHeader: React.FC<TopHeaderProps> = ({
@@ -63,6 +64,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   onLogout,
   onSelectTab,
   onViewLandingPage,
+  onOpenHostingerModal,
 }) => {
   const isMaster = crmStorage.isUserMaster(currentUser);
   const [periodDropdownOpen, setPeriodDropdownOpen] = useState(false);
@@ -297,6 +299,18 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             </button>
           )}
 
+          {onOpenHostingerModal && (
+            <button
+              type="button"
+              onClick={onOpenHostingerModal}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-[#2c431b] to-[#45612c] hover:from-[#354f21] hover:to-[#507234] text-white text-xs font-bold transition-all shadow-xs cursor-pointer border border-[#527732]"
+              title="Publicar na Hostinger e configurar domínio crmfv.com.br"
+            >
+              <Globe className="w-3.5 h-3.5 text-emerald-300" />
+              <span>Publicar na Hostinger</span>
+            </button>
+          )}
+
           {/* Period Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
@@ -466,6 +480,20 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                   >
                     <span>Guia de Dados & Integrações</span>
                   </button>
+
+                  {onOpenHostingerModal && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        onOpenHostingerModal();
+                      }}
+                      className="w-full text-left px-3.5 py-2 text-xs font-semibold text-[#25451c] hover:bg-[#edf5e3] flex items-center gap-2"
+                    >
+                      <Globe className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Publicar na Hostinger (crmfv.com.br)</span>
+                    </button>
+                  )}
                 </div>
 
                 <div className="pt-1 border-t border-[#eee9dc]">

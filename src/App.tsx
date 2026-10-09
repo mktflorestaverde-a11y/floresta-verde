@@ -22,6 +22,7 @@ import { OrderFormModal } from './components/modals/OrderFormModal';
 import { DataGuideModal } from './components/modals/DataGuideModal';
 import { LogoUploadModal } from './components/modals/LogoUploadModal';
 import { LandingMediaModal } from './components/modals/LandingMediaModal';
+import { HostingerDeployModal } from './components/modals/HostingerDeployModal';
 import { Sliders } from 'lucide-react';
 import {
   B2BFunnelStage,
@@ -87,6 +88,7 @@ export default function App() {
   const [isDataGuideOpen, setIsDataGuideOpen] = useState(false);
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [isHostingerModalOpen, setIsHostingerModalOpen] = useState(false);
 
   // Sync state whenever storage changes
   const refreshFromStorage = useCallback(() => {
@@ -407,6 +409,7 @@ export default function App() {
         onLogout={handleLogout}
         onViewLandingPage={() => setPreviewLandingPage(true)}
         onOpenMediaModal={() => setIsMediaModalOpen(true)}
+        onOpenHostingerModal={() => setIsHostingerModalOpen(true)}
         counts={{
           customers: customers.length,
           orders: orders.length,
@@ -435,6 +438,7 @@ export default function App() {
           }}
           onOpenDataGuide={() => setIsDataGuideOpen(true)}
           onOpenLogoModal={() => setIsLogoModalOpen(true)}
+          onOpenHostingerModal={() => setIsHostingerModalOpen(true)}
           isDemoMode={isDemoMode}
           onToggleDemoMode={handleToggleDemoMode}
           currentUser={currentUser}
@@ -649,6 +653,12 @@ export default function App() {
         }}
         currentLogoUrl={customLogoUrl}
         onLogoUpdated={(url) => setCustomLogoUrl(url)}
+      />
+
+      {/* Modal: Deploy to Hostinger & Custom Domain */}
+      <HostingerDeployModal
+        isOpen={isHostingerModalOpen}
+        onClose={() => setIsHostingerModalOpen(false)}
       />
     </div>
   );

@@ -38,6 +38,7 @@ interface SidebarProps {
   onLogout: () => void;
   onViewLandingPage?: () => void;
   onOpenMediaModal?: () => void;
+  onOpenHostingerModal?: () => void;
   counts?: {
     customers: number;
     orders: number;
@@ -58,6 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   onViewLandingPage,
   onOpenMediaModal,
+  onOpenHostingerModal,
   counts,
 }) => {
   const isMaster = crmStorage.isUserMaster(currentUser);
@@ -241,6 +243,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </>
               )}
             </button>
+
+            {onOpenHostingerModal && (
+              <button
+                type="button"
+                onClick={onOpenHostingerModal}
+                className="w-full mt-2 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#2f491c] to-[#3f5f24] hover:from-[#3a5a22] hover:to-[#4d722d] text-emerald-200 hover:text-white border border-[#527731] transition-all cursor-pointer shadow-xs"
+                title="Publicar na Hostinger e configurar domínio crmfv.com.br"
+              >
+                <Globe className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Subir na Hostinger (crmfv)</span>
+              </button>
+            )}
 
             {onViewLandingPage && (
               <button
