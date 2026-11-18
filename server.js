@@ -13,4 +13,7 @@ if (!existsSync(new URL('./dist/index.html', import.meta.url))) {
 
 // Load the TypeScript Express server after registering the tsx ESM loader.
 register();
-await import('./server.ts');
+import('./server.ts').catch((error) => {
+  console.error('[Floresta Verde] Falha ao iniciar o servidor:', error);
+  process.exitCode = 1;
+});
