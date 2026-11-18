@@ -14,7 +14,6 @@ import {
   Shield,
   ShieldCheck,
   ShoppingBag,
-  Sliders,
   Sparkles,
   ToggleLeft,
   ToggleRight,
@@ -388,18 +387,6 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             <span>+ Novo Cliente</span>
           </button>
 
-          {/* Customization: Logo, Header Typography & Banners (Exclusive for logged staff) */}
-          <button
-            type="button"
-            onClick={onOpenLogoModal}
-            className="px-3 py-2 rounded-xl bg-white border border-[#ded8c9] text-[#344820] hover:text-[#1c2918] hover:bg-[#f4f7ef] transition-colors flex items-center gap-1.5 text-xs font-semibold shadow-2xs cursor-pointer"
-            title="Ajustar manualmente o tamanho da logo, da escrita do cabeçalho e trocar imagens (Exclusivo da Equipe)"
-          >
-            <Sliders className="w-3.5 h-3.5 text-[#5d8339]" />
-            <span className="hidden sm:inline">Logo & Escritos</span>
-            <span className="sm:hidden">Logo</span>
-          </button>
-
           {/* User Profile & Logout Dropdown */}
           <div className="relative" ref={userDropdownRef}>
             <button
@@ -458,17 +445,6 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                       <span>Gerenciar Acessos & Usuários</span>
                     </button>
                   )}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUserDropdownOpen(false);
-                      onOpenLogoModal();
-                    }}
-                    className="w-full text-left px-3.5 py-2 text-xs text-[#3b4c27] hover:bg-[#f6f4ee] flex items-center gap-2"
-                  >
-                    <span>Gerenciar Logomarca Oficial</span>
-                  </button>
 
                   <button
                     type="button"

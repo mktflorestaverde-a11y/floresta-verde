@@ -10,8 +10,10 @@ import {
 import { formatISODate } from '../utils/crmCalculations';
 import {
   saveCustomerToFirestore,
+  saveCustomersBatchToFirestore,
   deleteCustomerFromFirestore,
   saveOrderToFirestore,
+  saveOrdersBatchToFirestore,
   deleteOrderFromFirestore,
   saveUserToFirestore,
   deleteUserFromFirestore,
@@ -155,6 +157,36 @@ export const crmStorage = {
     return customers[idx];
   },
 
+  batchUpsertCustomers(toInsert: Customer[], toUpdate: Customer[]): { insertedCount: number; updatedCount: number } {
+    const customers = this.getCustomers();
+    const updateMap = new Map<string, Customer>();
+    toUpdate.forEach((c) => updateMap.set(c.id, c));
+
+    // Atualiza os existentes
+    const mergedCustomers = customers.map((c) => {
+      if (updateMap.has(c.id)) {
+        return updateMap.get(c.id)!;
+      }
+      return c;
+    });
+
+    // Adiciona os novos no topo
+    const finalList = [...toInsert, ...mergedCustomers];
+    this.saveCustomers(finalList);
+
+    if (!this.isDemoMode()) {
+      const allToSync = [...toInsert, ...toUpdate];
+      saveCustomersBatchToFirestore(allToSync).catch((e) =>
+        console.warn('[Firestore] Erro ao sincronizar lote de importação:', e)
+      );
+    }
+
+    return {
+      insertedCount: toInsert.length,
+      updatedCount: toUpdate.length,
+    };
+  },
+
   deleteCustomer(id: string): boolean {
     const customers = this.getCustomers();
     const filtered = customers.filter((c) => c.id !== id);
@@ -250,6 +282,73 @@ export const crmStorage = {
       deleteOrderFromFirestore(id).catch((e) => console.warn('[Firestore] Delete order error:', e));
     }
     return true;
+  },
+
+  batchInsertOrders(
+    ordersToInsert: Order[],
+    newCustomersToInsert: Customer[] = [],
+    autoUpdateCustomerStages: boolean = true
+  ): { insertedOrdersCount: number; newCustomersCount: number } {
+    let currentCustomers = this.getCustomers();
+
+    // 1. Inserir novos clientes criados pela importação (caso não existissem ainda)
+    if (newCustomersToInsert.length > 0) {
+      currentCustomers = [...newCustomersToInsert, ...currentCustomers];
+      this.saveCustomers(currentCustomers);
+      if (!this.isDemoMode()) {
+        saveCustomersBatchToFirestore(newCustomersToInsert).catch((e) =>
+          console.warn('[Firestore] Erro ao sincronizar novos clientes gerados por pedidos:', e)
+        );
+      }
+    }
+
+    // 2. Inserir novos pedidos
+    const currentOrders = this.getOrders();
+    const finalOrders = [...ordersToInsert, ...currentOrders];
+    this.saveOrders(finalOrders);
+
+    if (!this.isDemoMode()) {
+      saveOrdersBatchToFirestore(ordersToInsert).catch((e) =>
+        console.warn('[Firestore] Erro ao sincronizar lote de pedidos no Firestore:', e)
+      );
+    }
+
+    // 3. Atualizar funil de clientes que agora possuem compras
+    if (autoUpdateCustomerStages) {
+      const customersToUpdate: Customer[] = [];
+      const updatedCustomers = currentCustomers.map((c) => {
+        const custPaidOrders = finalOrders.filter(
+          (o) => o.customerId === c.id && o.status === 'pago'
+        );
+        if (custPaidOrders.length >= 2 && c.funnelStage !== 'recompra') {
+          const upd = { ...c, funnelStage: 'recompra' as const };
+          customersToUpdate.push(upd);
+          return upd;
+        } else if (
+          custPaidOrders.length === 1 &&
+          (c.funnelStage === 'novos_contatos' || c.funnelStage === 'qualificados' || c.funnelStage === 'proposta')
+        ) {
+          const upd = { ...c, funnelStage: 'primeira_compra' as const };
+          customersToUpdate.push(upd);
+          return upd;
+        }
+        return c;
+      });
+
+      if (customersToUpdate.length > 0) {
+        this.saveCustomers(updatedCustomers);
+        if (!this.isDemoMode()) {
+          saveCustomersBatchToFirestore(customersToUpdate).catch((e) =>
+            console.warn('[Firestore] Erro ao sincronizar estágio dos clientes após importação de pedidos:', e)
+          );
+        }
+      }
+    }
+
+    return {
+      insertedOrdersCount: ordersToInsert.length,
+      newCustomersCount: newCustomersToInsert.length,
+    };
   },
 
   getSettings(): CycleSettings {

@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { Camera } from 'lucide-react';
+import React from 'react';
 
 interface LogoFlorestaVerdeProps {
   className?: string;
@@ -18,22 +17,16 @@ export const LogoFlorestaVerde: React.FC<LogoFlorestaVerdeProps> = ({
   height = 140,
   variant = 'shield',
   customLogoUrl,
-  onOpenUploadModal,
-  showUploadTrigger = false,
   showText = false,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
 
   // If user uploaded or specified their original brand logo file
   if (customLogoUrl) {
     if (variant === 'horizontal') {
       return (
         <div
-          className={`relative inline-flex items-center gap-3.5 select-none ${
-            showUploadTrigger ? 'cursor-pointer group' : ''
-          } ${className}`}
-          onClick={onOpenUploadModal}
-          title={showUploadTrigger ? 'Clique para alterar a logo' : undefined}
+          className={`inline-flex items-center gap-3.5 select-none ${className}`}
+          title="Floresta Verde ®"
         >
           <img
             src={customLogoUrl}
@@ -55,9 +48,7 @@ export const LogoFlorestaVerde: React.FC<LogoFlorestaVerdeProps> = ({
 
     return (
       <div
-        className={`relative inline-flex items-center justify-center select-none group shrink-0 ${
-          showUploadTrigger ? 'cursor-pointer' : ''
-        } ${className}`}
+        className={`inline-flex items-center justify-center select-none shrink-0 ${className}`}
         style={{
           width,
           height,
@@ -65,28 +56,14 @@ export const LogoFlorestaVerde: React.FC<LogoFlorestaVerdeProps> = ({
           minHeight: height,
           flexShrink: 0,
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onClick={onOpenUploadModal}
-        title={showUploadTrigger ? 'Logo Oficial Ativa • Clique para gerenciar imagens' : 'Logo Floresta Verde'}
+        title="Floresta Verde ®"
       >
         <img
           src={customLogoUrl}
           alt="Logo Floresta Verde Oficial"
-          className="w-full h-full object-contain drop-shadow-lg mx-auto transition-transform duration-200 group-hover:scale-[1.02]"
+          className="w-full h-full object-contain drop-shadow-md mx-auto select-none"
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         />
-
-        {showUploadTrigger && (
-          <div
-            className={`absolute inset-0 rounded-2xl bg-black/55 backdrop-blur-2xs flex flex-col items-center justify-center text-white transition-opacity duration-200 ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <Camera className="w-5 h-5 mb-1 text-[#d8e7c5]" />
-            <span className="text-[10px] font-semibold tracking-wide">Trocar logo</span>
-          </div>
-        )}
       </div>
     );
   }
@@ -95,11 +72,8 @@ export const LogoFlorestaVerde: React.FC<LogoFlorestaVerdeProps> = ({
   if (variant === 'horizontal') {
     return (
       <div
-        className={`inline-flex items-center gap-3.5 select-none shrink-0 ${
-          showUploadTrigger ? 'cursor-pointer group' : ''
-        } ${className}`}
-        onClick={onOpenUploadModal}
-        title={showUploadTrigger ? 'Clique para personalizar a logo' : undefined}
+        className={`inline-flex items-center gap-3.5 select-none shrink-0 ${className}`}
+        title="Floresta Verde ®"
       >
         <LogoFlorestaVerde width={42} height={48} variant="compact" />
         <div className="flex flex-col text-left shrink-0 whitespace-nowrap">
@@ -119,12 +93,10 @@ export const LogoFlorestaVerde: React.FC<LogoFlorestaVerdeProps> = ({
     );
   }
 
-  // Pure Vector Heraldic Shield (Razor-sharp, Scalable, Perfectly Balanced)
+  // Pure Vector Heraldic Shield (Razor-sharp, Scalable, Perfectly Balanced & Fixed)
   return (
     <div
-      className={`relative inline-flex items-center justify-center select-none group shrink-0 ${
-        showUploadTrigger ? 'cursor-pointer' : ''
-      } ${className}`}
+      className={`inline-flex items-center justify-center select-none shrink-0 ${className}`}
       style={{
         width,
         height,
@@ -132,16 +104,13 @@ export const LogoFlorestaVerde: React.FC<LogoFlorestaVerdeProps> = ({
         minHeight: height,
         flexShrink: 0,
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={onOpenUploadModal}
-      title={showUploadTrigger ? 'Clique para personalizar ou anexar a logo da empresa' : 'Floresta Verde ®'}
+      title="Floresta Verde ®"
     >
       <svg
         viewBox="0 0 240 280"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-full drop-shadow-md transition-transform duration-200 group-hover:scale-[1.02]"
+        className="w-full h-full drop-shadow-md select-none"
         style={{
           width: '100%',
           height: '100%',
@@ -325,20 +294,6 @@ export const LogoFlorestaVerde: React.FC<LogoFlorestaVerdeProps> = ({
           </g>
         )}
       </svg>
-
-      {/* Hover action prompt */}
-      {showUploadTrigger && (
-        <div
-          className={`absolute inset-0 rounded-2xl bg-black/55 backdrop-blur-2xs flex flex-col items-center justify-center text-white transition-opacity duration-200 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <Camera className="w-5 h-5 mb-1 text-[#d5e4c3]" />
-          <span className="text-[10px] font-semibold tracking-wide text-white">
-            Colocar minha logo
-          </span>
-        </div>
-      )}
     </div>
   );
 };

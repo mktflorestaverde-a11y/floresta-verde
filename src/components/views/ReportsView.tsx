@@ -419,33 +419,27 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           </div>
         </div>
 
-        {/* Brand & Logo Management Card */}
+        {/* Brand & Logo Permanent Status Card */}
         <div className="bg-white rounded-2xl p-6 border border-[#eae5d8] shadow-[0_2px_10px_rgba(0,0,0,0.02)] flex flex-col justify-between lg:col-span-2">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#edf3e6] flex items-center justify-center">
-                <ImageIcon className="w-5 h-5 text-[#465b2d]" />
+                <ShieldCheck className="w-5 h-5 text-[#465b2d]" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-[#1c2918]">
                   Identidade Visual & Logomarca da Floresta Verde
                 </h3>
                 <p className="text-xs text-[#738268]">
-                  {customLogoUrl
-                    ? 'Logomarca personalizada ativa. O arquivo enviado está sendo utilizado em todo o sistema.'
-                    : 'Utilizando vetor heráldico oficial. Você pode carregar o arquivo da sua logo (PNG, JPG, SVG).'}
+                  Logomarca oficial fixada e permanente. A identidade visual foi padronizada de forma definitiva em todo o ecossistema do CRM e páginas comerciais.
                 </p>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={onOpenLogoModal}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#495d2f] text-white text-xs font-semibold hover:bg-[#3c4e25] transition-all shadow-xs shrink-0"
-            >
-              <Camera className="w-4 h-4" />
-              <span>{customLogoUrl ? 'Alterar Arquivo da Logo' : 'Fazer Upload da Minha Logo'}</span>
-            </button>
+            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#edf5e5] border border-[#cbdcb9] text-[#344b20] text-xs font-semibold shrink-0">
+              <ShieldCheck className="w-4 h-4 text-[#495d2f]" />
+              <span>Logomarca Fixada & Protegida</span>
+            </div>
           </div>
         </div>
 

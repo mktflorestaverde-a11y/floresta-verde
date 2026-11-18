@@ -7,6 +7,7 @@ import {
   DollarSign,
   Edit2,
   ExternalLink,
+  FileSpreadsheet,
   Mail,
   MessageCircle,
   Package,
@@ -34,6 +35,7 @@ interface CustomerDetailModalProps {
   onNewOrderForCustomer: (customer: CustomerWithMetrics) => void;
   onEditOrder: (order: Order) => void;
   onDeleteOrder: (order: Order) => void;
+  onOpenExcelOrderImport?: () => void;
 }
 
 export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
@@ -45,6 +47,7 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
   onNewOrderForCustomer,
   onEditOrder,
   onDeleteOrder,
+  onOpenExcelOrderImport,
 }) => {
   if (!customer) return null;
 
@@ -283,14 +286,30 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                   Histórico de Pedidos ({customerOrders.length})
                 </h3>
               </div>
-              <button
-                type="button"
-                onClick={() => onNewOrderForCustomer(customer)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#495d2f] text-white text-xs font-semibold hover:bg-[#3c4e25] transition-colors shadow-2xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Adicionar Pedido</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {onOpenExcelOrderImport && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenExcelOrderImport();
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#2d6a4f]/30 text-[#1b4332] text-xs font-semibold hover:bg-[#1b4332]/5 transition-colors shadow-2xs"
+                    title="Importar pedidos via planilha Excel (.xlsx, .xls, .csv)"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-[#2d6a4f]" />
+                    <span>Importar Planilha</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onNewOrderForCustomer(customer)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#495d2f] text-white text-xs font-semibold hover:bg-[#3c4e25] transition-colors shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Adicionar Pedido</span>
+                </button>
+              </div>
             </div>
 
             <div className="border border-[#eae5d8] rounded-2xl overflow-hidden bg-white">
@@ -309,7 +328,20 @@ export const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                   {customerOrders.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="py-8 text-center text-[#809077]">
-                        Nenhum pedido registrado para este cliente ainda.
+                        <p>Nenhum pedido registrado para este cliente ainda.</p>
+                        {onOpenExcelOrderImport && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onClose();
+                              onOpenExcelOrderImport();
+                            }}
+                            className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#f0eee6] hover:bg-[#e4e0d4] text-[#2d3a20] text-xs font-semibold transition-colors"
+                          >
+                            <FileSpreadsheet className="w-3.5 h-3.5 text-[#2d6a4f]" />
+                            <span>Preencher Histórico pelo Excel</span>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ) : (

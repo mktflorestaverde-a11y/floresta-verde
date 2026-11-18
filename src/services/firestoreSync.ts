@@ -5,6 +5,7 @@ import {
   deleteDoc,
   getDocs,
   onSnapshot,
+  writeBatch,
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType, testFirestoreConnection } from './firebase';
 import { Customer, Order, CRMUserAccount, CycleSettings } from '../types/crm';
@@ -94,6 +95,30 @@ export async function saveCustomerToFirestore(customer: Customer): Promise<void>
   }
 }
 
+export async function saveCustomersBatchToFirestore(customers: Customer[]): Promise<void> {
+  const realCustomers = customers.filter((c) => !DEMO_CUSTOMER_IDS.has(c.id));
+  if (realCustomers.length === 0) return;
+
+  const CHUNK_SIZE = 400; // Limite do Firestore por batch é 500
+  for (let i = 0; i < realCustomers.length; i += CHUNK_SIZE) {
+    const chunk = realCustomers.slice(i, i + CHUNK_SIZE);
+    try {
+      const batch = writeBatch(db);
+      for (const cust of chunk) {
+        const clean = JSON.parse(JSON.stringify(cust));
+        batch.set(doc(db, 'customers', cust.id), clean, { merge: true });
+      }
+      await batch.commit();
+    } catch (error) {
+      console.warn('[Firestore] Erro ao sincronizar lote de clientes:', error);
+      // Fallback: tenta salvar individualmente se o batch falhar
+      for (const cust of chunk) {
+        saveCustomerToFirestore(cust).catch(() => {});
+      }
+    }
+  }
+}
+
 export async function deleteCustomerFromFirestore(id: string): Promise<void> {
   const path = `customers/${id}`;
   try {
@@ -113,6 +138,29 @@ export async function saveOrderToFirestore(order: Order): Promise<void> {
     await setDoc(doc(db, 'orders', order.id), cleanOrder, { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function saveOrdersBatchToFirestore(orders: Order[]): Promise<void> {
+  const realOrders = orders.filter((o) => !DEMO_ORDER_IDS.has(o.id));
+  if (realOrders.length === 0) return;
+
+  const CHUNK_SIZE = 400; // Limite do Firestore por batch é 500
+  for (let i = 0; i < realOrders.length; i += CHUNK_SIZE) {
+    const chunk = realOrders.slice(i, i + CHUNK_SIZE);
+    try {
+      const batch = writeBatch(db);
+      for (const ord of chunk) {
+        const clean = JSON.parse(JSON.stringify(ord));
+        batch.set(doc(db, 'orders', ord.id), clean, { merge: true });
+      }
+      await batch.commit();
+    } catch (error) {
+      console.warn('[Firestore] Erro ao sincronizar lote de pedidos:', error);
+      for (const ord of chunk) {
+        saveOrderToFirestore(ord).catch(() => {});
+      }
+    }
   }
 }
 

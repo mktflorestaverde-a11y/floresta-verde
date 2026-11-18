@@ -2,7 +2,6 @@ import React from 'react';
 import {
   BarChart3,
   CalendarClock,
-  Camera,
   Filter,
   Globe,
   Home,
@@ -109,23 +108,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Top: Brand Logo, Navigation, and Demo Switch */}
         <div className="flex-1 overflow-y-auto pr-0.5 custom-scrollbar">
           <div className="flex items-center justify-between px-2 mb-2 lg:mb-3">
-            <div className="w-full flex flex-col items-center py-1">
+            <div className="w-full flex flex-col items-center py-2 select-none">
               <LogoFlorestaVerde
-                width={138}
-                height={154}
+                width={136}
+                height={152}
                 customLogoUrl={customLogoUrl}
-                onOpenUploadModal={onOpenLogoModal}
-                showUploadTrigger={true}
+                showUploadTrigger={false}
               />
-              <button
-                type="button"
-                onClick={onOpenLogoModal}
-                className="mt-2 text-[11px] font-medium text-[#c0d4af] hover:text-white bg-[#2b381c]/70 hover:bg-[#43552d] px-3 py-1 rounded-full border border-[#485b2e] transition-colors flex items-center gap-1.5"
-                title="Clique para colocar ou trocar o arquivo oficial da logo"
-              >
-                <Camera className="w-3 h-3 text-[#d3e3c2]" />
-                <span>{customLogoUrl ? 'Alterar Logo' : 'Colocar Minha Logo'}</span>
-              </button>
+              <div className="mt-2.5 flex flex-col items-center text-center">
+                <span className="text-[13px] font-serif font-bold text-white tracking-wide">
+                  Floresta Verde
+                </span>
+                <span className="text-[10px] font-medium text-[#9fc287] tracking-widest uppercase">
+                  Aromas & Bem-Estar ®
+                </span>
+              </div>
             </div>
             <button
               type="button"

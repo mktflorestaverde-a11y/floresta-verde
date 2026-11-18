@@ -23,6 +23,8 @@ import { DataGuideModal } from './components/modals/DataGuideModal';
 import { LogoUploadModal } from './components/modals/LogoUploadModal';
 import { LandingMediaModal } from './components/modals/LandingMediaModal';
 import { HostingerDeployModal } from './components/modals/HostingerDeployModal';
+import { ExcelImportModal } from './components/modals/ExcelImportModal';
+import { ExcelOrderImportModal } from './components/modals/ExcelOrderImportModal';
 import { Sliders } from 'lucide-react';
 import {
   B2BFunnelStage,
@@ -89,6 +91,8 @@ export default function App() {
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [isHostingerModalOpen, setIsHostingerModalOpen] = useState(false);
+  const [isExcelImportOpen, setIsExcelImportOpen] = useState(false);
+  const [isExcelOrderImportOpen, setIsExcelOrderImportOpen] = useState(false);
 
   // Sync state whenever storage changes
   const refreshFromStorage = useCallback(() => {
@@ -482,6 +486,7 @@ export default function App() {
                 setCustomerToEdit(null);
                 setIsCustomerFormOpen(true);
               }}
+              onOpenExcelImport={() => setIsExcelImportOpen(true)}
               onNewOrderForCustomer={(c) => {
                 setOrderToEdit(null);
                 setDefaultCustomerForOrder(c);
@@ -549,6 +554,7 @@ export default function App() {
                 const found = customersWithMetrics.find((c) => c.id === cid);
                 if (found) setSelectedCustomer(found);
               }}
+              onOpenExcelOrderImport={() => setIsExcelOrderImportOpen(true)}
             />
           )}
 
@@ -610,6 +616,7 @@ export default function App() {
           setIsOrderFormOpen(true);
         }}
         onDeleteOrder={handleDeleteOrder}
+        onOpenExcelOrderImport={() => setIsExcelOrderImportOpen(true)}
       />
 
       {/* Modal: Create or Edit Customer */}
@@ -659,6 +666,28 @@ export default function App() {
       <HostingerDeployModal
         isOpen={isHostingerModalOpen}
         onClose={() => setIsHostingerModalOpen(false)}
+      />
+
+      {/* Modal: Importar Planilha Excel de Clientes */}
+      <ExcelImportModal
+        isOpen={isExcelImportOpen}
+        onClose={() => setIsExcelImportOpen(false)}
+        existingCustomers={customers}
+        onImportComplete={(toInsert, toUpdate) => {
+          crmStorage.batchUpsertCustomers(toInsert, toUpdate);
+          refreshFromStorage();
+        }}
+      />
+
+      {/* Modal: Importar Planilha Excel de Histórico de Pedidos */}
+      <ExcelOrderImportModal
+        isOpen={isExcelOrderImportOpen}
+        onClose={() => setIsExcelOrderImportOpen(false)}
+        existingCustomers={customers}
+        onImportComplete={(ordersToInsert, newCustomersToInsert) => {
+          crmStorage.batchInsertOrders(ordersToInsert, newCustomersToInsert, true);
+          refreshFromStorage();
+        }}
       />
     </div>
   );

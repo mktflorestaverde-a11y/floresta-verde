@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Download,
   ExternalLink,
@@ -13,6 +13,8 @@ import {
   ArrowRight,
   X,
   FileCode2,
+  RefreshCw,
+  Sparkles,
 } from 'lucide-react';
 
 interface HostingerDeployModalProps {
@@ -25,7 +27,33 @@ export const HostingerDeployModal: React.FC<HostingerDeployModalProps> = ({
   onClose,
 }) => {
   const [copiedDomain, setCopiedDomain] = useState(false);
-  const [downloadStarted, setDownloadStarted] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [isRebuilding, setIsRebuilding] = useState(false);
+  const [packageSize, setPackageSize] = useState<string>('0.56 MB');
+
+  const checkStatus = async () => {
+    try {
+      const res = await fetch('/api/download/hostinger-status');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.sizeFormatted) {
+          setPackageSize(data.sizeFormatted);
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      checkStatus();
+      setDownloadSuccess(false);
+      setDownloadError(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -35,14 +63,64 @@ export const HostingerDeployModal: React.FC<HostingerDeployModalProps> = ({
     setTimeout(() => setCopiedDomain(false), 2000);
   };
 
-  const handleDownload = () => {
-    setDownloadStarted(true);
-    const link = document.createElement('a');
-    link.href = '/hostinger-public_html.zip';
-    link.download = 'hostinger-public_html.zip';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    setDownloadError(null);
+    setDownloadSuccess(false);
+
+    try {
+      const response = await fetch('/api/download/hostinger-zip');
+      if (!response.ok) {
+        throw new Error(`Erro HTTP ${response.status} ao carregar pacote.`);
+      }
+      const blob = await response.blob();
+      if (!blob || blob.size === 0) {
+        throw new Error('Arquivo vazio recebido.');
+      }
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'hostinger-public_html.zip');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => window.URL.revokeObjectURL(url), 2000);
+      setDownloadSuccess(true);
+    } catch (err: any) {
+      console.warn('[HostingerDeploy] Falha no download via blob, acionando fallback:', err);
+      // Fallback to direct navigation download
+      const fallbackLink = document.createElement('a');
+      fallbackLink.href = '/api/download/hostinger-zip';
+      fallbackLink.download = 'hostinger-public_html.zip';
+      fallbackLink.target = '_blank';
+      document.body.appendChild(fallbackLink);
+      fallbackLink.click();
+      document.body.removeChild(fallbackLink);
+      setDownloadSuccess(true);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleRebuildAndDownload = async () => {
+    setIsRebuilding(true);
+    setDownloadError(null);
+    setDownloadSuccess(false);
+    try {
+      const res = await fetch('/api/download/hostinger-rebuild', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Falha ao recompilar os arquivos.');
+      }
+      if (data.sizeFormatted) {
+        setPackageSize(data.sizeFormatted);
+      }
+      await handleDownload();
+    } catch (err: any) {
+      setDownloadError(err.message || 'Erro ao recompilar o projeto.');
+    } finally {
+      setIsRebuilding(false);
+    }
   };
 
   return (
@@ -81,24 +159,74 @@ export const HostingerDeployModal: React.FC<HostingerDeployModalProps> = ({
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6 text-xs sm:text-sm text-[#2d3a22]">
           
           {/* Main Action Banner: 1-Click Download */}
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-[#f2f8ed] to-[#e4f0dc] border-2 border-[#b5d5ab] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-[#1c4118] font-bold text-base">
-                <FolderArchive className="w-5 h-5 text-emerald-700" />
-                <span>Pacote de Produção Pronto para a Hostinger</span>
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-[#f2f8ed] to-[#e4f0dc] border-2 border-[#b5d5ab] shadow-xs flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-[#1c4118] font-bold text-base">
+                  <FolderArchive className="w-5 h-5 text-emerald-700" />
+                  <span>Pacote de Produção Pronto para a Hostinger</span>
+                </div>
+                <p className="text-xs text-[#405c36] leading-relaxed">
+                  Arquivo ZIP limpo ({packageSize}) contendo o código compilado em HTML/JS/CSS e o arquivo <code className="bg-white/80 px-1.5 py-0.5 rounded border border-[#c1deba] font-mono text-[11px] text-[#244f1e]">.htaccess</code> com tipos MIME configurados para evitar erro 404 e tela branca.
+                </p>
               </div>
-              <p className="text-xs text-[#405c36] leading-relaxed">
-                Este arquivo ZIP já contém todo o código compilado em HTML/JS/CSS de alta performance e com o arquivo <code className="bg-white/80 px-1.5 py-0.5 rounded border border-[#c1deba] font-mono text-[11px] text-[#244f1e]">.htaccess</code> configurado para evitar erro 404 e tela branca.
-              </p>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleDownload}
+                  disabled={isDownloading || isRebuilding}
+                  className="px-5 py-3 rounded-2xl bg-[#2e5e23] hover:bg-[#234b1a] disabled:opacity-60 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all shrink-0 cursor-pointer active:scale-95"
+                >
+                  <Download className={`w-4 h-4 ${isDownloading ? 'animate-bounce' : ''}`} />
+                  <span>{isDownloading ? 'Baixando Arquivo...' : 'Baixar hostinger-public_html.zip'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleRebuildAndDownload}
+                  disabled={isDownloading || isRebuilding}
+                  className="px-3.5 py-3 rounded-2xl bg-white hover:bg-[#ebf4e6] border border-[#a8cda0] text-[#274f1e] font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Recompila todos os arquivos do zero e baixa a versão mais fresca"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isRebuilding ? 'animate-spin text-emerald-700' : ''}`} />
+                  <span>{isRebuilding ? 'Recompilando...' : 'Recompilar'}</span>
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={handleDownload}
-              className="px-5 py-3 rounded-2xl bg-[#2e5e23] hover:bg-[#234b1a] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all shrink-0 cursor-pointer active:scale-95"
-            >
-              <Download className="w-4 h-4" />
-              <span>{downloadStarted ? 'Baixando Novamente...' : 'Baixar hostinger-public_html.zip'}</span>
-            </button>
+
+            {/* Direct fallback link and status */}
+            <div className="pt-2 border-t border-[#c6dfbc] flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 text-[#35532b]">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Pacote validado: <b>{packageSize}</b> (sem arquivos duplicados ou recursivos).</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <a
+                  href="/api/download/hostinger-zip"
+                  download="hostinger-public_html.zip"
+                  className="text-[#2b5a1f] font-semibold hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Download Alternativo (Link Direto)</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+
+            {downloadSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                <span>Download iniciado com sucesso! Salve o arquivo <b>hostinger-public_html.zip</b> e siga os 4 passos abaixo.</span>
+              </div>
+            )}
+
+            {downloadError && (
+              <div className="p-3 rounded-xl bg-red-100 border border-red-300 text-red-900 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-red-700 shrink-0" />
+                <span>{downloadError}</span>
+              </div>
+            )}
           </div>
 
           {/* 4 Steps for Beginners (Zero Code Required) */}

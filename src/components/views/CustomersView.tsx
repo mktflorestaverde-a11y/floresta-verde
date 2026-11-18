@@ -5,6 +5,7 @@ import {
   Calendar,
   Clock,
   ExternalLink,
+  FileSpreadsheet,
   Filter,
   MessageCircle,
   MoreVertical,
@@ -33,6 +34,7 @@ interface CustomersViewProps {
   onEditCustomer: (customer: CustomerWithMetrics) => void;
   onDeleteCustomer: (customer: CustomerWithMetrics) => void;
   onNewCustomer: () => void;
+  onOpenExcelImport?: () => void;
   onNewOrderForCustomer: (customer: CustomerWithMetrics) => void;
   currentSegment?: 'all' | 'b2b' | 'b2c';
   onSelectSegment?: (segment: 'all' | 'b2b' | 'b2c') => void;
@@ -44,6 +46,7 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   onEditCustomer,
   onDeleteCustomer,
   onNewCustomer,
+  onOpenExcelImport,
   onNewOrderForCustomer,
   currentSegment,
   onSelectSegment,
@@ -291,6 +294,18 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
                 Cartões
               </button>
             </div>
+
+            {onOpenExcelImport && (
+              <button
+                type="button"
+                onClick={onOpenExcelImport}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-[#2d6a4f]/30 text-[#1b4332] text-xs md:text-sm font-semibold hover:bg-[#1b4332]/5 transition-all shadow-2xs"
+                title="Importar lista de clientes a partir de arquivo Excel (.xlsx, .xls, .csv)"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-[#2d6a4f]" />
+                <span>Importar Excel</span>
+              </button>
+            )}
 
             <button
               type="button"

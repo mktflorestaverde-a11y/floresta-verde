@@ -87,17 +87,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <span>Voltar ao Site B2B</span>
             </button>
           )}
-
-          {onOpenLogoModal && (
-            <button
-              type="button"
-              onClick={onOpenLogoModal}
-              className="text-xs font-medium text-[#52653a] hover:text-[#2d3a1d] bg-[#f0f4ea] hover:bg-[#e4eed9] px-3 py-1.5 rounded-lg border border-[#cad9bc] transition-colors"
-              title="Colocar o arquivo original da sua logo"
-            >
-              Personalizar Logo
-            </button>
-          )}
         </div>
       </header>
 
@@ -106,12 +95,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
         <div className="w-full max-w-md bg-white rounded-3xl border border-[#dcd6c5] shadow-xl shadow-[#344322]/5 overflow-hidden">
           {/* Header banner */}
           <div className="bg-[#344322] px-6 pt-8 pb-7 text-center relative overflow-hidden">
-            <div className="relative z-10 flex flex-col items-center">
-              <div
-                className={`relative transition-transform ${onOpenLogoModal ? 'cursor-pointer group hover:scale-[1.02]' : ''}`}
-                onClick={onOpenLogoModal}
-                title={onOpenLogoModal ? "Clique para personalizar ou carregar a logo oficial" : undefined}
-              >
+            <div className="relative z-10 flex flex-col items-center select-none">
+              <div className="relative">
                 <LogoFlorestaVerde
                   width={116}
                   height={132}

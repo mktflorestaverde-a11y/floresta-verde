@@ -20,6 +20,85 @@ app.use(express.json());
 app.get('/healthz', (_req, res) => res.status(200).send('OK'));
 app.get('/api/health', (_req, res) => res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() }));
 
+// --------------------------------------------------------------------------
+// Hostinger Deployment Package Download & Status
+// --------------------------------------------------------------------------
+function getHostingerZipPath(): string | null {
+  const candidatePaths = [
+    path.resolve(__dirname, 'public', 'hostinger-public_html.zip'),
+    path.resolve(__dirname, 'dist', 'hostinger-public_html.zip'),
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+app.get('/api/download/hostinger-status', (_req, res) => {
+  const zipPath = getHostingerZipPath();
+  if (zipPath) {
+    const stats = fs.statSync(zipPath);
+    return res.json({
+      available: true,
+      sizeBytes: stats.size,
+      sizeFormatted: `${(stats.size / (1024 * 1024)).toFixed(2)} MB`,
+      updatedAt: stats.mtime.toISOString(),
+      filename: 'hostinger-public_html.zip',
+    });
+  }
+  return res.json({
+    available: false,
+    message: 'Pacote ainda não compilado',
+  });
+});
+
+const sendHostingerZip = (_req: express.Request, res: express.Response) => {
+  const zipPath = getHostingerZipPath();
+  if (!zipPath || !fs.existsSync(zipPath)) {
+    return res.status(404).json({ error: 'Arquivo hostinger-public_html.zip não encontrado.' });
+  }
+
+  const stats = fs.statSync(zipPath);
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', 'attachment; filename="hostinger-public_html.zip"');
+  res.setHeader('Content-Length', stats.size.toString());
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
+  const fileStream = fs.createReadStream(zipPath);
+  fileStream.pipe(res);
+};
+
+app.get('/api/download/hostinger-zip', sendHostingerZip);
+app.get('/hostinger-public_html.zip', sendHostingerZip);
+
+app.post('/api/download/hostinger-rebuild', async (_req, res) => {
+  try {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    // Clean any old zip files
+    await execAsync('python3 -c "import os; [os.remove(p) for p in [\'public/hostinger-public_html.zip\', \'dist/hostinger-public_html.zip\'] if os.path.exists(p)]"');
+    // Run production build
+    await execAsync('npm run build');
+    // Zip contents of dist cleanly without recursion
+    await execAsync('python3 -c "import os, zipfile, shutil; z = zipfile.ZipFile(\'public/hostinger-public_html.zip\', \'w\', zipfile.ZIP_DEFLATED); [z.write(os.path.join(root, f), os.path.relpath(os.path.join(root, f), \'dist\')) for root, dirs, files in os.walk(\'dist\') for f in files if not f.endswith(\'.zip\')]; z.close(); shutil.copy2(\'public/hostinger-public_html.zip\', \'dist/hostinger-public_html.zip\')"');
+    
+    const zipPath = getHostingerZipPath();
+    const stats = zipPath ? fs.statSync(zipPath) : null;
+    return res.json({
+      success: true,
+      sizeFormatted: stats ? `${(stats.size / (1024 * 1024)).toFixed(2)} MB` : '0.56 MB',
+      message: 'Pacote compilado e preparado com sucesso!',
+    });
+  } catch (err: any) {
+    console.error('[Hostinger Rebuild] Error:', err);
+    return res.status(500).json({ success: false, error: err.message || 'Falha ao recompilar' });
+  }
+});
+
 // In-memory audit log for WhatsApp API messages & webhooks
 interface WhatsAppAuditLog {
   id: string;

@@ -6,6 +6,7 @@ import {
   Clock,
   CreditCard,
   DollarSign,
+  FileSpreadsheet,
   Filter,
   Package,
   Pencil,
@@ -25,6 +26,7 @@ interface OrdersViewProps {
   onEditOrder: (order: Order) => void;
   onDeleteOrder: (order: Order) => void;
   onSelectCustomerById?: (customerId: string) => void;
+  onOpenExcelOrderImport?: () => void;
   currentSegment?: 'all' | 'b2b' | 'b2c';
   onSelectSegment?: (segment: 'all' | 'b2b' | 'b2c') => void;
 }
@@ -35,6 +37,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
   onEditOrder,
   onDeleteOrder,
   onSelectCustomerById,
+  onOpenExcelOrderImport,
   currentSegment,
   onSelectSegment,
 }) => {
@@ -235,6 +238,33 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
         </div>
       </div>
 
+      {/* Excel Orders Import Guidance Banner */}
+      <div className="bg-[#f2f7ec] border border-[#cbe0ba] rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#2b3c1b]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-white border border-[#b8d4a3] flex items-center justify-center text-[#2d6a4f] shrink-0 shadow-2xs">
+            <FileSpreadsheet className="w-5 h-5 text-[#2d6a4f]" />
+          </div>
+          <div>
+            <span className="font-bold text-[#1f2f14] block text-sm">
+              Preenchimento Automático do Histórico de Compras
+            </span>
+            <span className="text-[#516341]">
+              Suba a planilha do Excel com os pedidos anteriores para vincular aos clientes já cadastrados e atualizar LTV, recência e ciclos de recompra.
+            </span>
+          </div>
+        </div>
+        {onOpenExcelOrderImport && (
+          <button
+            type="button"
+            onClick={onOpenExcelOrderImport}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2d6a4f] text-white font-bold text-xs hover:bg-[#1b4332] transition-colors shrink-0 shadow-xs"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Importar Planilha de Pedidos</span>
+          </button>
+        )}
+      </div>
+
       {/* Filter and Action bar */}
       <div className="bg-white rounded-2xl p-5 border border-[#eae5d8] shadow-[0_2px_10px_rgba(0,0,0,0.02)] space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -249,14 +279,28 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
             />
           </div>
 
-          <button
-            type="button"
-            onClick={onNewOrder}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#495d2f] text-white text-xs md:text-sm font-semibold hover:bg-[#3c4e25] transition-all shadow-xs"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Registrar Pedido</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {onOpenExcelOrderImport && (
+              <button
+                type="button"
+                onClick={onOpenExcelOrderImport}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-[#2d6a4f]/30 text-[#1b4332] text-xs md:text-sm font-semibold hover:bg-[#1b4332]/5 transition-all shadow-2xs"
+                title="Importar planilha de vendas e histórico de pedidos (.xlsx, .xls, .csv)"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-[#2d6a4f]" />
+                <span>Importar Pedidos (Excel)</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={onNewOrder}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#495d2f] text-white text-xs md:text-sm font-semibold hover:bg-[#3c4e25] transition-all shadow-xs"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Registrar Pedido</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -343,14 +387,26 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                           ? 'Nenhum pedido encontrado com os filtros selecionados.'
                           : 'Você está no modo real. Registre pedidos para calcular o faturamento e ciclos de recompra.'}
                       </p>
-                      <button
-                        type="button"
-                        onClick={onNewOrder}
-                        className="mt-3 px-4 py-2 rounded-xl bg-[#485b2e] hover:bg-[#384824] text-white text-xs font-semibold shadow-xs flex items-center gap-1.5"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>+ Registrar Pedido</span>
-                      </button>
+                      <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+                        {onOpenExcelOrderImport && (
+                          <button
+                            type="button"
+                            onClick={onOpenExcelOrderImport}
+                            className="px-4 py-2 rounded-xl bg-white border border-[#2d6a4f]/30 text-[#1b4332] text-xs font-semibold shadow-2xs flex items-center gap-1.5 hover:bg-[#edf3e6]"
+                          >
+                            <FileSpreadsheet className="w-3.5 h-3.5 text-[#2d6a4f]" />
+                            <span>Importar Pedidos (Excel)</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={onNewOrder}
+                          className="px-4 py-2 rounded-xl bg-[#485b2e] hover:bg-[#384824] text-white text-xs font-semibold shadow-xs flex items-center gap-1.5"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>+ Registrar Pedido</span>
+                        </button>
+                      </div>
                     </div>
                   </td>
                 </tr>

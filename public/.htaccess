@@ -7,6 +7,17 @@
   RewriteRule . /index.html [L]
 </IfModule>
 
+# MIME Types configuration for Hostinger / Apache / LiteSpeed
+<IfModule mod_mime.c>
+  AddType application/javascript .js .mjs
+  AddType text/css .css
+  AddType image/svg+xml .svg
+  AddType application/json .json
+  AddType font/woff .woff
+  AddType font/woff2 .woff2
+  AddDefaultCharset UTF-8
+</IfModule>
+
 # Caching for assets
 <IfModule mod_expires.c>
   ExpiresActive On
@@ -17,4 +28,9 @@
   ExpiresByType image/svg+xml "access plus 1 year"
   ExpiresByType text/css "access plus 1 month"
   ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# Compression for high performance
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
 </IfModule>
