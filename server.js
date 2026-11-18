@@ -1,6 +1,16 @@
+import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { register } from 'tsx/esm/api';
 
-// Hostinger starts this JavaScript entry file. Register tsx so the existing
-// Express server can run from its TypeScript source without duplicating code.
+// Hostinger runs this entry file for the full-stack Express + Vite application.
+process.env.NODE_ENV ||= 'production';
+
+// Hostinger's Express preset starts the entry file directly. Build the Vite
+// frontend on first start when the deployment did not run a separate build step.
+if (!existsSync(new URL('./dist/index.html', import.meta.url))) {
+  execFileSync('npm', ['run', 'build'], { stdio: 'inherit' });
+}
+
+// Load the TypeScript Express server after registering the tsx ESM loader.
 register();
 await import('./server.ts');
