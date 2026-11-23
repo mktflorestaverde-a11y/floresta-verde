@@ -205,6 +205,35 @@ export async function saveSettingsToFirestore(settings: CycleSettings): Promise<
 }
 
 // ----------------------------------------------------------------------------
+// Shared brand identity (synchronized across all CRM devices and public pages)
+// ----------------------------------------------------------------------------
+export async function saveBrandLogoToFirestore(logoDataUrl: string): Promise<boolean> {
+  try {
+    await setDoc(doc(db, 'settings', 'brand'), {
+      customLogoUrl: logoDataUrl,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Falha ao sincronizar a logo da marca:', error);
+    return false;
+  }
+}
+
+export async function removeBrandLogoFromFirestore(): Promise<boolean> {
+  try {
+    await setDoc(doc(db, 'settings', 'brand'), {
+      customLogoUrl: null,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+    return true;
+  } catch (error) {
+    console.error('[Firebase] Falha ao remover a logo compartilhada:', error);
+    return false;
+  }
+}
+
+// ----------------------------------------------------------------------------
 // Purge Demo Data from Firebase (keeping only real database)
 // ----------------------------------------------------------------------------
 async function purgeDemoDataFromFirestore(): Promise<void> {
