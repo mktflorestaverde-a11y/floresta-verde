@@ -168,15 +168,21 @@ export const LandingMediaModal: React.FC<LandingMediaModalProps> = ({
     fileInputRef.current?.click();
   };
 
-  const handleSaveAll = () => {
-    // 1. Save Logo
+  const handleSaveAll = async () => {
+    // Save the logo to the shared Firestore brand settings before showing success.
     if (logoUrl !== currentLogoUrl) {
-      if (logoUrl) crmStorage.saveCustomLogo(logoUrl);
-      else crmStorage.removeCustomLogo();
+      const logoSaved = logoUrl
+        ? await crmStorage.saveCustomLogo(logoUrl)
+        : await crmStorage.removeCustomLogo();
+
+      if (!logoSaved) {
+        alert('Não foi possível sincronizar a logo com todos os dispositivos. Verifique a conexão com o Firebase e tente novamente.');
+        return;
+      }
       onLogoUpdated(logoUrl);
     }
 
-    // 2. Save Landing Page Media & Sizing
+    // Save the remaining presentation controls locally, as before.
     const mediaPayload: LandingMediaSettings = {
       treeBgUrl: treeBgUrl.trim() || null,
       productDiffusersUrl: diffusersUrl.trim() || null,
@@ -220,9 +226,14 @@ export const LandingMediaModal: React.FC<LandingMediaModalProps> = ({
     setBannerOverlayOpacity(40);
   };
 
-  const handleResetToDefaults = () => {
+  const handleResetToDefaults = async () => {
     if (confirm('Deseja restaurar todas as fotos e tamanhos para o padrão oficial da Floresta Verde?')) {
-      crmStorage.removeCustomLogo();
+      const logoRemoved = await crmStorage.removeCustomLogo();
+      if (!logoRemoved) {
+        alert('Não foi possível restaurar a logo padrão em todos os dispositivos. Verifique a conexão com o Firebase e tente novamente.');
+        return;
+      }
+
       crmStorage.removeLandingMedia();
       onLogoUpdated(null);
       setLogoUrl(null);
