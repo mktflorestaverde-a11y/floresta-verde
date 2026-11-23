@@ -129,6 +129,10 @@ export const LandingMediaModal: React.FC<LandingMediaModalProps> = ({
           quality: 0.9,
           outputFormat: 'image/png',
         });
+        if (compressedDataUrl.length > 900000) {
+          alert('A logo otimizada ainda ficou muito grande para sincronizar. Use uma imagem PNG otimizada ou SVG menor.');
+          return;
+        }
         setLogoUrl(compressedDataUrl);
       } else if (target === 'heroTree') {
         // Full HD landscape banner optimized
