@@ -19,6 +19,8 @@ import {
   saveUserToFirestore,
   deleteUserFromFirestore,
   saveSettingsToFirestore,
+  saveBrandLogoToFirestore,
+  removeBrandLogoFromFirestore,
 } from './firestoreSync';
 
 // Storage Keys
@@ -427,22 +429,31 @@ export const crmStorage = {
     }
   },
 
-  saveCustomLogo(logoDataUrl: string): void {
+  async saveCustomLogo(logoDataUrl: string): Promise<boolean> {
+    // Save to the shared Firestore document first; never report device-only saves as global.
+    const synced = await saveBrandLogoToFirestore(logoDataUrl);
+    if (!synced) return false;
+
     try {
       localStorage.setItem(CUSTOM_LOGO_KEY, logoDataUrl);
       window.dispatchEvent(new CustomEvent(CRM_DATA_CHANGE_EVENT));
     } catch (e) {
-      console.error('Falha ao salvar logo:', e);
+      console.warn('A logo foi sincronizada, mas não pôde ser armazenada em cache local:', e);
     }
+    return true;
   },
 
-  removeCustomLogo(): void {
+  async removeCustomLogo(): Promise<boolean> {
+    const synced = await removeBrandLogoFromFirestore();
+    if (!synced) return false;
+
     try {
       localStorage.removeItem(CUSTOM_LOGO_KEY);
       window.dispatchEvent(new CustomEvent(CRM_DATA_CHANGE_EVENT));
     } catch (e) {
-      console.error('Falha ao remover logo:', e);
+      console.error('Falha ao limpar o cache local da logo:', e);
     }
+    return true;
   },
 
   getLandingMedia(): LandingMediaSettings {
