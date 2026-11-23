@@ -65,20 +65,32 @@ export const LogoUploadModal: React.FC<LogoUploadModalProps> = ({
     }
   };
 
-  const handleApplyLogo = () => {
-    if (previewUrl) {
-      crmStorage.saveCustomLogo(previewUrl);
-      onLogoUpdated(previewUrl);
-      setSuccessMsg(true);
-      setTimeout(() => {
-        setSuccessMsg(false);
-        onClose();
-      }, 700);
+  const handleApplyLogo = async () => {
+    if (!previewUrl) return;
+
+    setErrorMsg(null);
+    const savedGlobally = await crmStorage.saveCustomLogo(previewUrl);
+    if (!savedGlobally) {
+      setErrorMsg('Não foi possível sincronizar a logo com o site. Verifique a conexão e tente novamente.');
+      return;
     }
+
+    onLogoUpdated(previewUrl);
+    setSuccessMsg(true);
+    setTimeout(() => {
+      setSuccessMsg(false);
+      onClose();
+    }, 700);
   };
 
-  const handleResetToDefault = () => {
-    crmStorage.removeCustomLogo();
+  const handleResetToDefault = async () => {
+    setErrorMsg(null);
+    const removedGlobally = await crmStorage.removeCustomLogo();
+    if (!removedGlobally) {
+      setErrorMsg('Não foi possível restaurar a logo padrão no site. Verifique a conexão e tente novamente.');
+      return;
+    }
+
     setPreviewUrl(null);
     onLogoUpdated(null);
     setSuccessMsg(true);
