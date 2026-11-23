@@ -8,6 +8,7 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType, testFirestoreConnection } from './firebase';
+import { ROOT_MASTER_PASSWORD_HASH } from './masterCredential';
 import { Customer, Order, CRMUserAccount, CycleSettings } from '../types/crm';
 import {
   INITIAL_CUSTOMERS,
@@ -66,7 +67,7 @@ const DEMO_ORDER_IDS = new Set(INITIAL_ORDERS.map((o) => o.id));
 export const ROOT_MASTER_USER: CRMUserAccount = {
   id: 'usr-master-1',
   username: 'cesarDiretor',
-  password: '123456',
+  password: ROOT_MASTER_PASSWORD_HASH,
   name: 'Cesar Diretor',
   role: 'master',
   roleLabel: 'Master • Diretoria Executiva',
@@ -243,7 +244,7 @@ async function purgeDemoDataFromFirestore(): Promise<void> {
 }
 
 // ----------------------------------------------------------------------------
-// Ensure Master User (cesarDiretor / 123456) in Firestore
+// Ensure Master User (cesarDiretor) in Firestore
 // ----------------------------------------------------------------------------
 async function ensureMasterUserInFirestore(): Promise<void> {
   try {
