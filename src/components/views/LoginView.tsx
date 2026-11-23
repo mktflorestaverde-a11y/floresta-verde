@@ -32,7 +32,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -47,17 +47,19 @@ export const LoginView: React.FC<LoginViewProps> = ({
     }
 
     setIsLoading(true);
-
-    setTimeout(() => {
-      const res = crmStorage.login(username, password, rememberMe);
-      setIsLoading(false);
-
+    try {
+      const res = await crmStorage.login(username, password, rememberMe);
       if (res.success && res.user) {
         onLoginSuccess(res.user);
       } else {
         setErrorMessage(res.message || 'Credenciais inválidas. Verifique os dados digitados.');
       }
-    }, 200);
+    } catch (error) {
+      console.error('[CRM Login] Falha ao validar credenciais:', error);
+      setErrorMessage('Não foi possível validar o acesso. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -213,13 +215,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   type="button"
                   onClick={() => {
                     setUsername('cesarDiretor');
-                    setPassword('123456');
+                    setPassword('');
                     setErrorMessage(null);
                   }}
                   className="text-[11px] text-[#556942] hover:text-[#2d3a1f] underline underline-offset-2 transition-colors inline-flex items-center gap-1 cursor-pointer"
                 >
                   <Lock className="w-3 h-3 text-[#70845a]" />
-                  <span>Preencher Acesso Master (cesarDiretor)</span>
+                  <span>Preencher usuário Master (cesarDiretor)</span>
                 </button>
 
                 {onBackToLanding && (
