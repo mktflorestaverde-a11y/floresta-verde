@@ -208,6 +208,12 @@ export async function saveSettingsToFirestore(settings: CycleSettings): Promise<
 // Shared brand identity (synchronized across all CRM devices and public pages)
 // ----------------------------------------------------------------------------
 export async function saveBrandLogoToFirestore(logoDataUrl: string): Promise<boolean> {
+  // Firestore documents are limited to 1 MiB; keep a safe margin for metadata.
+  if (logoDataUrl.startsWith('data:') && logoDataUrl.length > 900000) {
+    console.error('[Firebase] Logo acima do limite seguro para sincronização no Firestore.');
+    return false;
+  }
+
   try {
     await setDoc(doc(db, 'settings', 'brand'), {
       customLogoUrl: logoDataUrl,
