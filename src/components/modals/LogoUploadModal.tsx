@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { crmStorage } from '../../services/crmStorage';
+import { compressImageFile } from '../../utils/imageOptimizer';
 
 interface LogoUploadModalProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ export const LogoUploadModal: React.FC<LogoUploadModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     setErrorMsg(null);
     if (!file.type.startsWith('image/')) {
       setErrorMsg('Por favor, selecione um arquivo de imagem válido (PNG, JPG, SVG, WebP).');
@@ -44,17 +45,22 @@ export const LogoUploadModal: React.FC<LogoUploadModalProps> = ({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      if (dataUrl) {
-        setPreviewUrl(dataUrl);
+    try {
+      const dataUrl = await compressImageFile(file, {
+        maxWidth: 500,
+        maxHeight: 500,
+        quality: 0.9,
+        outputFormat: 'image/png',
+      });
+      if (dataUrl.length > 900000) {
+        setErrorMsg('A logo ainda ficou muito grande para sincronizar. Use um PNG/SVG otimizado com menos de 650 KB.');
+        return;
       }
-    };
-    reader.onerror = () => {
-      setErrorMsg('Erro ao ler a imagem selecionada.');
-    };
-    reader.readAsDataURL(file);
+      setPreviewUrl(dataUrl);
+    } catch (error) {
+      console.error('Erro ao otimizar logo:', error);
+      setErrorMsg('Não foi possível processar a logo selecionada.');
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
