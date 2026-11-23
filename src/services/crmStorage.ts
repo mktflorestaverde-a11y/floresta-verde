@@ -8,6 +8,7 @@ import {
   UserRole,
 } from '../types/crm';
 import { formatISODate } from '../utils/crmCalculations';
+import { ROOT_MASTER_PASSWORD_HASH } from './masterCredential';
 import {
   saveCustomerToFirestore,
   saveCustomersBatchToFirestore,
@@ -52,8 +53,29 @@ export interface LandingMediaSettings {
 const DEMO_MODE_KEY = 'floresta_verde_demo_mode_v2';
 const AUTH_SESSION_KEY = 'floresta_verde_auth_user_v1';
 const USERS_KEY = 'floresta_verde_crm_users_v1';
+const MASTER_PASSWORD_MIGRATION_KEY = 'floresta_verde_master_password_migration_v2';
+const MASTER_SESSION_RESET_KEY = 'floresta_verde_master_session_reset_v2';
 
 export const CRM_DATA_CHANGE_EVENT = 'floresta_verde_crm_changed';
+
+async function verifyRootMasterPassword(inputPassword: string): Promise<boolean> {
+  try {
+    const parts = ROOT_MASTER_PASSWORD_HASH.split('$');
+    if (parts.length !== 4 || parts[0] !== 'pbkdf2-sha256') return false;
+    const iterations = Number(parts[1]);
+    if (!Number.isInteger(iterations) || iterations < 100000) return false;
+    const salt = Uint8Array.from(atob(parts[2]), (ch) => ch.charCodeAt(0));
+    const expected = Uint8Array.from(atob(parts[3]), (ch) => ch.charCodeAt(0));
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(inputPassword), 'PBKDF2', false, ['deriveBits']);
+    const actual = new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }, key, expected.length * 8));
+    if (actual.length !== expected.length) return false;
+    let difference = 0;
+    for (let i = 0; i < actual.length; i++) difference |= actual[i] ^ expected[i];
+    return difference === 0;
+  } catch {
+    return false;
+  }
+}
 
 export interface CRMAuthUser {
   id?: string;
@@ -565,12 +587,23 @@ export const crmStorage = {
       const raw = localStorage.getItem(USERS_KEY);
       if (!raw) {
         this.saveUsers(INITIAL_USERS);
+        localStorage.setItem(MASTER_PASSWORD_MIGRATION_KEY, 'done');
         return INITIAL_USERS;
       }
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed) || parsed.length === 0) {
         this.saveUsers(INITIAL_USERS);
+        localStorage.setItem(MASTER_PASSWORD_MIGRATION_KEY, 'done');
         return INITIAL_USERS;
+      }
+
+      if (localStorage.getItem(MASTER_PASSWORD_MIGRATION_KEY) !== 'done') {
+        const rootMaster = parsed.find((user: CRMUserAccount) => user.username?.toUpperCase() === 'CESARDIRETOR');
+        if (rootMaster) {
+          rootMaster.password = ROOT_MASTER_PASSWORD_HASH;
+          localStorage.setItem(USERS_KEY, JSON.stringify(parsed));
+        }
+        localStorage.setItem(MASTER_PASSWORD_MIGRATION_KEY, 'done');
       }
       return parsed;
     } catch {
@@ -704,14 +737,26 @@ export const crmStorage = {
   getAuthUser(): CRMAuthUser | null {
     try {
       const raw = sessionStorage.getItem(AUTH_SESSION_KEY) || localStorage.getItem(AUTH_SESSION_KEY);
-      if (!raw) return null;
-      return JSON.parse(raw);
+      if (!raw) {
+        localStorage.setItem(MASTER_SESSION_RESET_KEY, 'done');
+        return null;
+      }
+      const authUser = JSON.parse(raw) as CRMAuthUser;
+      if (localStorage.getItem(MASTER_SESSION_RESET_KEY) !== 'done') {
+        localStorage.setItem(MASTER_SESSION_RESET_KEY, 'done');
+        if (authUser.username?.toUpperCase() === 'CESARDIRETOR') {
+          sessionStorage.removeItem(AUTH_SESSION_KEY);
+          localStorage.removeItem(AUTH_SESSION_KEY);
+          return null;
+        }
+      }
+      return authUser;
     } catch {
       return null;
     }
   },
 
-  login(usernameInput: string, passwordInput: string, remember: boolean = true): { success: boolean; message?: string; user?: CRMAuthUser } {
+  async login(usernameInput: string, passwordInput: string, remember: boolean = true): Promise<{ success: boolean; message?: string; user?: CRMAuthUser }> {
     const trimmedUser = usernameInput.trim().toUpperCase().replace(/\s+/g, '');
     const trimmedPass = passwordInput.trim();
 
@@ -719,7 +764,11 @@ export const crmStorage = {
     const foundUser = users.find((u) => u.username.toUpperCase() === trimmedUser);
 
     if (foundUser) {
-      if (foundUser.password !== trimmedPass) {
+      const isRootMaster = foundUser.username.toUpperCase() === 'CESARDIRETOR';
+      const passwordIsValid = isRootMaster
+        ? await verifyRootMasterPassword(trimmedPass)
+        : foundUser.password === trimmedPass;
+      if (!passwordIsValid) {
         return {
           success: false,
           message: 'Senha incorreta. Verifique a senha digitada ou solicite a redefinição ao Master.',
