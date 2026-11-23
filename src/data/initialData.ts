@@ -6,6 +6,7 @@ import {
   CRMUserAccount,
 } from '../types/crm';
 import { formatISODate } from '../utils/crmCalculations';
+import { ROOT_MASTER_PASSWORD_HASH } from '../services/masterCredential';
 
 export const CRM_DATA_CHANGE_EVENT = 'floresta_verde_crm_changed';
 
@@ -13,7 +14,7 @@ export const INITIAL_USERS: CRMUserAccount[] = [
   {
     id: 'usr-master-1',
     username: 'cesarDiretor',
-    password: '123456',
+    password: ROOT_MASTER_PASSWORD_HASH,
     name: 'Cesar Diretor',
     role: 'master',
     roleLabel: 'Master • Diretoria Executiva',
