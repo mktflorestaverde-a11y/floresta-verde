@@ -389,6 +389,34 @@ export async function initFirestoreDatabase(): Promise<void> {
       }
     );
 
+    // Brand identity: keep the official logo synchronized across all devices.
+    onSnapshot(
+      doc(db, 'settings', 'brand'),
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const remoteLogo = snapshot.data().customLogoUrl;
+          if (typeof remoteLogo === 'string' && remoteLogo.trim()) {
+            localStorage.setItem('floresta_verde_custom_logo_v1', remoteLogo);
+          } else {
+            localStorage.removeItem('floresta_verde_custom_logo_v1');
+          }
+          window.dispatchEvent(new CustomEvent(CRM_DATA_CHANGE_EVENT));
+          return;
+        }
+
+        // Migrate an existing logo from the first browser that has one saved locally.
+        const legacyLogo = localStorage.getItem('floresta_verde_custom_logo_v1');
+        if (legacyLogo) {
+          void saveBrandLogoToFirestore(legacyLogo).then((saved) => {
+            if (saved) console.log('[Firebase] Logo local migrada para a identidade compartilhada.');
+          });
+        }
+      },
+      (error) => {
+        handleFirestoreError(error, OperationType.GET, 'settings/brand');
+      }
+    );
+
     notifyStatus({
       isConnected: true,
       isSyncing: false,
